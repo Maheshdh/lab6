@@ -6,6 +6,8 @@ import {bands} from '../config/mongoCollections.js'
 import {ObjectId} from 'mongodb';
 import * as albumData from '../data/albums.js';
 import * as bandData from '../data/bands.js';
+import validation from '../validation.js';
+
 
 
 const router = Router();
@@ -14,34 +16,20 @@ router
   .route('/:bandId')
   .get(async (req, res) => {
     //code here for GET
-
+    try{
+      validation.checkId(req.params.bandId);
+     }catch(e){
+       return res.status(400).send('BandID parameter is not passed');
+     }
     const  bandId  = req.params.bandId;
-    //console.log("band id = ",req.params)
-    // check if bandId is a valid ObjectId
-  if (!ObjectId.isValid(bandId)) {
-    console.log("here")
-    return res.status(400).send('Invalid bandId');
-  }
-
-  //const bandCollection = await bands();
-  const band = await albumData.get(bandId)
-  console.log(" band in al = ",band)
-
-  if (!band) {
-    return res.status(404).send('Band not found');
-  }
-
-  //const albums = band.albums;
-
-  // check if there are any albums for the specified band
-  if (!band || band.length === 0) {
-    return res.status(404).send('No albums found for band');
-  }
-
-  res.status(200).send(band);
-
-
-  
+    const band = await bandData.get(bandId)
+    if (!band) {
+      return res.status(404).send('Band not found');
+    }
+    if (!band || band.length === 0 || !band.albums || band.albums.length === 0) {
+      return res.status(404).send('No albums found for band');
+    }
+    res.status(200).send(band.albums);
   })
   .post(async (req, res) => {
     //code here for POST
@@ -93,7 +81,7 @@ router
       return res.status(400).json({error: e})
     }
     */
-
+    console.log("req params = ",req.params)
     
     try{
       const req_album = await albumData.get(req.params.albumId);

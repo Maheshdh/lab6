@@ -28,7 +28,7 @@ const create = async (
       !tracks.every(track => typeof track === 'string' && track.trim())) {
     throw new Error('Invalid tracks');
   } 
-*/
+
 bandId = validation.checkString(bandId,'bandId');
 title = validation.checkString(title,'title');
 releaseDate = validation.checkString(releaseDate,'releaseDate');
@@ -37,33 +37,20 @@ tracks = validation.checkStringArray(tracks, 'tracks')
 if(tracks.length<3){
   throw "The Tracks array should have at least 3 tracks "
 }
+*/
 
 
 
   const bandCollection = await bands();
-  const movie = await bandCollection.findOne({_id: new ObjectId(bandId)});
+  //const cur_band = await bandCollection.findOne({_id: new ObjectId(bandId)});
 
 
   const band = await band_data.get(bandId);
-  if (!movie) {
+  if (!band) {
     throw new Error('Band not found');
   }
 
-  // Validate release date
-  const releaseDateParts = releaseDate.split('/');
-  if (releaseDateParts.length !== 3) {
-    throw new Error('Invalid release date');
-  }
-  const month = parseInt(releaseDateParts[0]);
-  const day = parseInt(releaseDateParts[1]);
-  const year = parseInt(releaseDateParts[2]);
-  const isValidDate = !isNaN(month) && !isNaN(day) && !isNaN(year) &&
-    month >= 1 && month <= 12 && day >= 1 && day <= 31 && year >= 1900 &&
-    year <= new Date().getFullYear() + 1;
-  if (!isValidDate) {
-    throw new Error('Invalid release date');
-  }
-
+  
   // Create album
   const album = {
     _id: new ObjectId(),
@@ -72,8 +59,9 @@ if(tracks.length<3){
     tracks: tracks.map(track => track.trim()),
     rating: parseFloat(rating.toFixed(1))
   };
-  movie.albums.push(album);
-  const newOverallRating = recalculateBandRating(movie._id);
+  band.albums.push(album);
+  console.log("band id = ",bandId)
+  const newOverallRating = recalculateBandRating(new ObjectId(bandId));
 
   const updatedInfo = await bandCollection.updateOne(
     { _id: new ObjectId(bandId) },
@@ -82,7 +70,7 @@ if(tracks.length<3){
         $set: { overallRating: newOverallRating },
       }
   );
-  if(updatedInfo.modifiedCount=== 0) throw "Could not add review";
+  if(updatedInfo.modifiedCount=== 0) throw "Could not add album";
 
   
   return album;
